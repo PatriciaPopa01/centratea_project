@@ -32,10 +32,35 @@ public class Client {
 			if (!"OK_CONNECTED".equals(connectResponse)) {
 				return;
 			}
-		} catch (UnknownHostException e) {
-			throw new RuntimeException(e);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
+
+            Thread listener = new Thread(() -> listenForServerMessages(in));
+            listener.setDaemon(true);
+            listener.start();
+
+            System.out.println("Trimite o incercare de 4 cifre distincte sau scrie quit pentru iesire.");
+
+            String input;
+            while ((input = console.readLine()) != null) {
+                if (input.equalsIgnoreCase("quit")) {
+                    out.println(ClientProtocol.quit());
+                    break;
+                }
+
+                out.println(ClientProtocol.guess(input));
+            }
+        } catch (IOException exception) {
+            System.out.println("Clientul nu se poate conecta sau conexiunea s-a inchis: " + exception.getMessage());
+        }
+    }
+
+    private static void listenForServerMessages(BufferedReader in) {
+        try {
+            String message;
+            while ((message = in.readLine()) != null) {
+                System.out.println("Server: " + message);
+            }
+        } catch (IOException exception) {
+            System.out.println("Conexiunea cu serverul s-a inchis.");
+        }
+    }
 }
